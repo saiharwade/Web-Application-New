@@ -223,7 +223,6 @@ body::after {
 }
 .popup-close-btn:hover { background: var(--red); border-color: var(--red); box-shadow: 0 0 12px rgba(255,60,90,.35); }
 
-
 /* ─── MAIN LAYOUT ─── */
 .container {
   display: grid;
@@ -664,7 +663,7 @@ body::after {
     </div>
 
     <div class="action-row">
-      <button class="action-btn primary" onclick="captureImage()">▶ START</button>
+      <button class="action-btn primary" id="startStopBtn" onclick="toggleScan()">▶ START</button>
       <button class="action-btn" onclick="goToHistory()">⟳ HISTORY</button>
       <button class="action-btn" onclick="openAbout()">ℹ ABOUT</button>
     </div>
@@ -674,7 +673,6 @@ body::after {
   <div class="panel right-panel">
     <div class="panel-title">Diamond Reading</div>
 
-    <!-- Live Result -->
     <div class="live-result-card">
       <div style="font-size:11px;letter-spacing:2px;color:var(--text-muted);font-family:'Share Tech Mono',monospace;margin-bottom:6px;">CLASSIFICATION</div>
       <div class="diamond-type none" id="diamondType">— AWAITING —</div>
@@ -691,7 +689,6 @@ body::after {
       </div>
     </div>
 
-    <!-- Count cards -->
     <div>
       <div class="panel-title" style="margin-bottom:8px;">Category Count</div>
       <div class="count-grid">
@@ -710,7 +707,6 @@ body::after {
       </div>
     </div>
 
-    <!-- Bar Chart -->
     <div class="chart-wrap">
       <div class="chart-title">▸ BREAKDOWN CHART</div>
       <div class="bar-chart">
@@ -732,7 +728,6 @@ body::after {
       </div>
     </div>
 
-    <!-- Recent scans -->
     <div>
       <div class="panel-title" style="margin-bottom:8px;">Recent Scans</div>
       <div class="recent-list" id="recentList">
@@ -742,12 +737,11 @@ body::after {
   </div>
 </div>
 
-
 <!-- DIAMOND TYPES POPUP -->
 <div class="image-popup" id="diamondTypesPopup" onclick="closeDiamondTypes(event)">
   <div class="image-popup-card">
     <button class="popup-close-btn" onclick="closeDiamondTypes()" aria-label="Close">×</button>
-    <img id="diamondTypesImage" src="diamond-types.png" alt="Diamond types reference image">
+    <img id="diamondTypesImage" src="diamond-types.jpg" alt="Diamond types reference image">
   </div>
 </div>
 
@@ -768,6 +762,9 @@ body::after {
 const counts = { NATURAL: 0, CVD: 0, HPHT: 0 };
 let totalScans = 0;
 const recentScans = [];
+let isScanning = false;
+let scanInterval = null;
+let isScanRunning = false;
 
 /* ──────────── CLOCK ──────────── */
 function updateClock() {
@@ -806,17 +803,66 @@ async function startCamera() {
 }
 window.addEventListener('load', startCamera);
 
-/* ──────────── CAPTURE ──────────── */
-function captureImage() {
-  setStatus('scanning');
-  document.getElementById('scanOverlay').classList.add('active');
-  document.getElementById('camTag').textContent = '◈ SCANNING...';
+/* ──────────── START / STOP TOGGLE ──────────── */
+function toggleScan() {
+  const btn = document.getElementById('startStopBtn');
 
-  setTimeout(() => {
+  if (!isScanning) {
+    isScanning = true;
+    btn.innerHTML = '■ STOP';
+    btn.classList.remove('primary');
+    btn.classList.add('danger');
+    document.getElementById('camTag').textContent = '◈ AUTO SCAN ACTIVE';
+    setStatus('scanning');
+    startAutoScan();
+  } else {
+    isScanning = false;
+    btn.innerHTML = '▶ START';
+    btn.classList.remove('danger');
+    btn.classList.add('primary');
     document.getElementById('scanOverlay').classList.remove('active');
     document.getElementById('camTag').textContent = '● LIVE FEED';
+    stopAutoScan();
     setStatus('ready');
-  }, 2000);
+  }
+}
+
+function startAutoScan() {
+  if (scanInterval) clearInterval(scanInterval);
+
+  runSingleScan();
+
+  scanInterval = setInterval(() => {
+    if (!isScanning || isScanRunning) return;
+    runSingleScan();
+  }, 3000);
+}
+
+function stopAutoScan() {
+  if (scanInterval) {
+    clearInterval(scanInterval);
+    scanInterval = null;
+  }
+}
+
+async function runSingleScan() {
+  if (!isScanning || isScanRunning) return;
+  isScanRunning = true;
+
+  try {
+    await scanImage();
+  } finally {
+    isScanRunning = false;
+    if (!isScanning) {
+      document.getElementById('scanOverlay').classList.remove('active');
+      document.getElementById('camTag').textContent = '● LIVE FEED';
+    }
+  }
+}
+
+/* ──────────── LEGACY MANUAL CAPTURE ──────────── */
+function captureImage() {
+  toggleScan();
 }
 
 /* ──────────── SCAN ──────────── */
@@ -829,7 +875,13 @@ function generateLotId() {
 async function scanImage() {
   const video  = document.getElementById('camera');
   const canvas = document.getElementById('snapshot');
-  if (!video.srcObject) { alert('Camera not started'); return; }
+
+  if (!video.srcObject) {
+    alert('Camera not started');
+    return;
+  }
+
+  if (!isScanning) return;
 
   setStatus('scanning');
   document.getElementById('scanOverlay').classList.add('active');
@@ -841,7 +893,7 @@ async function scanImage() {
   ctx.drawImage(video, 0, 0);
   const imageData = canvas.toDataURL('image/png');
 
-  const lotId    = generateLotId();
+  const lotId = generateLotId();
   const timestamp = new Date().toISOString();
 
   document.getElementById('lotIdDisplay').textContent = lotId;
@@ -855,7 +907,6 @@ async function scanImage() {
     if (!res.ok) throw new Error('Server error');
     await res.json();
 
-    // Simulate AI classification result (replace with real API response)
     const types = ['NATURAL','CVD','HPHT'];
     const classified = types[Math.floor(Math.random()*3)];
     const confidence = (75 + Math.random()*24).toFixed(1);
@@ -864,7 +915,6 @@ async function scanImage() {
 
   } catch(e) {
     console.error(e);
-    // Still show mock result for demo
     const types = ['NATURAL','CVD','HPHT'];
     const classified = types[Math.floor(Math.random()*3)];
     const confidence = (75 + Math.random()*24).toFixed(1);
@@ -872,8 +922,14 @@ async function scanImage() {
   }
 
   document.getElementById('scanOverlay').classList.remove('active');
-  document.getElementById('camTag').textContent = '● LIVE FEED';
-  setStatus('ready');
+
+  if (isScanning) {
+    document.getElementById('camTag').textContent = '◈ AUTO SCAN ACTIVE';
+    setStatus('scanning');
+  } else {
+    document.getElementById('camTag').textContent = '● LIVE FEED';
+    setStatus('ready');
+  }
 }
 
 /* ──────────── UPDATE RESULT UI ──────────── */
@@ -883,49 +939,39 @@ function updateResult(type, confidence, lotId) {
 
   document.getElementById('totalScans').textContent = totalScans;
 
-  // Type display
   const typeEl = document.getElementById('diamondType');
   typeEl.textContent = type;
   typeEl.className = 'diamond-type ' + type.toLowerCase();
 
-  // Confidence bar
   const colors = { NATURAL: 'var(--green)', CVD: 'var(--cyan)', HPHT: 'var(--hpht-clr)' };
   document.getElementById('confFill').style.width = confidence + '%';
   document.getElementById('confFill').style.background = colors[type];
   document.getElementById('confPct').textContent = confidence + '%';
 
-  // Scan time
   const now = new Date();
   document.getElementById('lastScanTime').textContent =
     now.toLocaleTimeString('en-GB');
   document.getElementById('lastLotId').textContent = lotId;
 
-  // Counts
   document.getElementById('cntNatural').textContent = counts.NATURAL;
   document.getElementById('cntCVD').textContent     = counts.CVD;
   document.getElementById('cntHPHT').textContent    = counts.HPHT;
 
-  // Chart
   const total = totalScans;
   const pct = t => total ? Math.round((counts[t]/total)*100) : 0;
-  ['NATURAL','CVD','HPHT'].forEach(t => {
-    const p = pct(t);
-    document.getElementById('bar'+t[0]+t.slice(1).toLowerCase().replace('hpht','HPHT').replace('cvd','CVD')).style.width = p + '%';
-  });
-  document.getElementById('barNatural').style.width = pct('NATURAL') + '%';
-  document.getElementById('barCVD').style.width     = pct('CVD')     + '%';
-  document.getElementById('barHPHT').style.width    = pct('HPHT')    + '%';
-  document.getElementById('barNaturalPct').textContent = pct('NATURAL') + '%';
-  document.getElementById('barCVDPct').textContent     = pct('CVD')     + '%';
-  document.getElementById('barHPHTPct').textContent    = pct('HPHT')    + '%';
 
-  // Result flash on camera
+  document.getElementById('barNatural').style.width = pct('NATURAL') + '%';
+  document.getElementById('barCVD').style.width     = pct('CVD') + '%';
+  document.getElementById('barHPHT').style.width    = pct('HPHT') + '%';
+  document.getElementById('barNaturalPct').textContent = pct('NATURAL') + '%';
+  document.getElementById('barCVDPct').textContent     = pct('CVD') + '%';
+  document.getElementById('barHPHTPct').textContent    = pct('HPHT') + '%';
+
   const flash = document.getElementById('resultFlash');
   flash.textContent = type;
   flash.className = 'result-flash show ' + type.toLowerCase();
   setTimeout(() => flash.classList.remove('show'), 2200);
 
-  // Recent list
   recentScans.unshift({ type, confidence, time: now.toLocaleTimeString('en-GB'), lotId });
   if (recentScans.length > 5) recentScans.pop();
   renderRecent();
@@ -947,7 +993,6 @@ function renderRecent() {
 /* ──────────── CAMERA CONTROLS ──────────── */
 function adjustZoom(dir) { console.log('Zoom', dir); }
 function focusCamera()   { console.log('Auto focus triggered'); }
-
 
 function openDiamondTypes() {
   document.getElementById('diamondTypesPopup').classList.add('show');
