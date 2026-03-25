@@ -156,6 +156,74 @@ body::after {
 }
 .power-btn:hover { background:var(--red); color:white; box-shadow:0 0 12px var(--red); }
 
+.header-actions { display:flex; align-items:center; gap:10px; }
+.info-btn {
+  min-width: 96px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 18px;
+  border:1px solid var(--border);
+  background:transparent;
+  color:var(--cyan);
+  font-family:'Rajdhani', sans-serif;
+  font-size:14px;
+  font-weight:600;
+  letter-spacing:1px;
+  cursor:pointer;
+  transition:.25s;
+}
+.info-btn:hover { border-color: var(--cyan); background: var(--cyan-dim); box-shadow: 0 0 12px rgba(0,229,255,.22); }
+
+.image-popup {
+  display:none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.78);
+  z-index: 9500;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(6px);
+}
+.image-popup.show { display:flex; }
+.image-popup-card {
+  position: relative;
+  max-width: min(92vw, 1100px);
+  max-height: 88vh;
+  background: var(--bg-card);
+  border: 1px solid var(--border-bright);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 0 40px rgba(0,229,255,0.18);
+}
+.image-popup-card img {
+  display:block;
+  max-width: 100%;
+  max-height: calc(88vh - 36px);
+  object-fit: contain;
+  border-radius: 10px;
+}
+.popup-close-btn {
+  position:absolute;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(2,11,24,0.9);
+  color: white;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:.2s;
+}
+.popup-close-btn:hover { background: var(--red); border-color: var(--red); box-shadow: 0 0 12px rgba(255,60,90,.35); }
+
+
 /* ─── MAIN LAYOUT ─── */
 .container {
   display: grid;
@@ -523,7 +591,10 @@ body::after {
       <div class="time" id="clockTime">00:00:00</div>
       <div class="date" id="clockDate">--</div>
     </div>
-    <button class="power-btn" onclick="powerOff()" title="Power Off">⏻</button>
+    <div class="header-actions">
+      <button class="info-btn" onclick="openDiamondTypes()" title="Diamond Types">◈ TYPES</button>
+      <button class="power-btn" onclick="powerOff()" title="Power Off">⏻</button>
+    </div>
   </div>
 </div>
 
@@ -593,9 +664,9 @@ body::after {
     </div>
 
     <div class="action-row">
-      <button class="action-btn primary" id="startStopBtn" onclick="toggleAutoScan()">▶ START</button>
+      <button class="action-btn primary" onclick="captureImage()">▶ START</button>
       <button class="action-btn" onclick="goToHistory()">⟳ HISTORY</button>
-      <button class="action-btn" onclick="scanImage()">◈ SCAN</button>
+      <button class="action-btn" onclick="openAbout()">ℹ ABOUT</button>
     </div>
   </div>
 
@@ -671,6 +742,15 @@ body::after {
   </div>
 </div>
 
+
+<!-- DIAMOND TYPES POPUP -->
+<div class="image-popup" id="diamondTypesPopup" onclick="closeDiamondTypes(event)">
+  <div class="image-popup-card">
+    <button class="popup-close-btn" onclick="closeDiamondTypes()" aria-label="Close">×</button>
+    <img id="diamondTypesImage" src="diamond-types.png" alt="Diamond types reference image">
+  </div>
+</div>
+
 <!-- POWER MODAL -->
 <div class="modal" id="powerModal">
   <div class="modal-content">
@@ -688,9 +768,6 @@ body::after {
 const counts = { NATURAL: 0, CVD: 0, HPHT: 0 };
 let totalScans = 0;
 const recentScans = [];
-let isAutoScanning = false;
-let autoScanInterval = null;
-let isScanInProgress = false;
 
 /* ──────────── CLOCK ──────────── */
 function updateClock() {
@@ -729,62 +806,17 @@ async function startCamera() {
 }
 window.addEventListener('load', startCamera);
 
-/* ──────────── AUTO SCAN TOGGLE ──────────── */
-function toggleAutoScan() {
-  if (isAutoScanning) {
-    stopAutoScan();
-  } else {
-    startAutoScan();
-  }
-}
-
-function startAutoScan() {
-  const video = document.getElementById('camera');
-  if (!video.srcObject) {
-    alert('Camera not started');
-    return;
-  }
-
-  isAutoScanning = true;
-  updateStartStopButton();
+/* ──────────── CAPTURE ──────────── */
+function captureImage() {
   setStatus('scanning');
-  document.getElementById('camTag').textContent = '◈ AUTO SCAN ACTIVE';
+  document.getElementById('scanOverlay').classList.add('active');
+  document.getElementById('camTag').textContent = '◈ SCANNING...';
 
-  scanImage();
-
-  if (autoScanInterval) clearInterval(autoScanInterval);
-  autoScanInterval = setInterval(() => {
-    if (!isAutoScanning || isScanInProgress) return;
-    scanImage();
-  }, 2500);
-}
-
-function stopAutoScan() {
-  isAutoScanning = false;
-  if (autoScanInterval) {
-    clearInterval(autoScanInterval);
-    autoScanInterval = null;
-  }
-  updateStartStopButton();
-  document.getElementById('scanOverlay').classList.remove('active');
-  document.getElementById('camTag').textContent = isAutoScanning ? '◈ AUTO SCAN ACTIVE' : '● LIVE FEED';
-  setStatus(isAutoScanning ? 'scanning' : 'ready');
-  isScanInProgress = false;
-}
-
-function updateStartStopButton() {
-  const btn = document.getElementById('startStopBtn');
-  if (!btn) return;
-
-  if (isAutoScanning) {
-    btn.innerHTML = '■ STOP';
-    btn.classList.add('danger');
-    btn.classList.remove('primary');
-  } else {
-    btn.innerHTML = '▶ START';
-    btn.classList.add('primary');
-    btn.classList.remove('danger');
-  }
+  setTimeout(() => {
+    document.getElementById('scanOverlay').classList.remove('active');
+    document.getElementById('camTag').textContent = '● LIVE FEED';
+    setStatus('ready');
+  }, 2000);
 }
 
 /* ──────────── SCAN ──────────── */
@@ -798,12 +830,10 @@ async function scanImage() {
   const video  = document.getElementById('camera');
   const canvas = document.getElementById('snapshot');
   if (!video.srcObject) { alert('Camera not started'); return; }
-  if (isScanInProgress) return;
 
-  isScanInProgress = true;
   setStatus('scanning');
   document.getElementById('scanOverlay').classList.add('active');
-  document.getElementById('camTag').textContent = isAutoScanning ? '◈ AUTO ANALYZING...' : '◈ ANALYZING...';
+  document.getElementById('camTag').textContent = '◈ ANALYZING...';
 
   const ctx = canvas.getContext('2d');
   canvas.width  = video.videoWidth;
@@ -842,9 +872,8 @@ async function scanImage() {
   }
 
   document.getElementById('scanOverlay').classList.remove('active');
-  document.getElementById('camTag').textContent = isAutoScanning ? '◈ AUTO SCAN ACTIVE' : '● LIVE FEED';
-  setStatus(isAutoScanning ? 'scanning' : 'ready');
-  isScanInProgress = false;
+  document.getElementById('camTag').textContent = '● LIVE FEED';
+  setStatus('ready');
 }
 
 /* ──────────── UPDATE RESULT UI ──────────── */
@@ -919,8 +948,19 @@ function renderRecent() {
 function adjustZoom(dir) { console.log('Zoom', dir); }
 function focusCamera()   { console.log('Auto focus triggered'); }
 
+
+function openDiamondTypes() {
+  document.getElementById('diamondTypesPopup').classList.add('show');
+}
+function closeDiamondTypes(event) {
+  if (!event || event.target.id === 'diamondTypesPopup') {
+    document.getElementById('diamondTypesPopup').classList.remove('show');
+  }
+}
+
 /* ──────────── NAVIGATION ──────────── */
 function goToHistory() { window.location.href = 'history.html'; }
+function openAbout()   { window.location.href = 'about.html'; }
 function powerOff()    { document.getElementById('powerModal').style.display = 'flex'; }
 function closeModal()  { document.getElementById('powerModal').style.display = 'none'; }
 function confirmPowerOff() { window.location.href = 'index.html'; }
