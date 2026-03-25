@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>History - D Vision Pro</title>
+
+<style>
+
+/* ---------------- GENERAL ---------------- */
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family: Arial, sans-serif;
+}
+
+body{
+background:#f2f2f2;
+min-height:100vh;
+}
+
+/* ---------------- HEADER ---------------- */
+
+.top-bar{
+height:70px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:#ffffff;
+border-bottom:1px solid #ddd;
+}
+
+.top-bar h1{
+font-size:32px;
+color:#555;
+}
+
+/* ---------------- MAIN CONTAINER ---------------- */
+
+.container{
+width:80%;
+margin:30px auto;
+}
+
+/* ---------------- SEARCH ---------------- */
+
+.search-row{
+display:flex;
+gap:20px;
+margin-bottom:25px;
+}
+
+.search-box{
+flex:1;
+position:relative;
+}
+
+.search-box input{
+width:100%;
+padding:14px 45px 14px 15px;
+border-radius:8px;
+border:1px solid #bbb;
+font-size:16px;
+}
+
+.search-box span{
+position:absolute;
+right:15px;
+top:50%;
+transform:translateY(-50%);
+font-size:18px;
+color:#777;
+}
+
+/* ---------------- HISTORY CARD ---------------- */
+
+.history-card{
+background:#1c2754;
+color:white;
+border-radius:6px;
+margin-bottom:20px;
+overflow:hidden;
+}
+
+.card-header{
+padding:18px 20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+cursor:pointer;
+}
+
+.card-header small{
+display:block;
+margin-top:5px;
+opacity:0.7;
+font-size:13px;
+}
+
+.arrow{
+font-size:20px;
+}
+
+/* ---------------- CARD CONTENT ---------------- */
+
+.card-content{
+background:#eaeaea;
+padding:20px;
+display:none;
+}
+
+/* ---------------- BUTTONS ---------------- */
+
+.button-row{
+display:flex;
+gap:15px;
+margin-bottom:15px;
+}
+
+.btn{
+flex:1;
+padding:12px;
+border:none;
+border-radius:8px;
+font-size:15px;
+cursor:pointer;
+color:white;
+}
+
+.result{ background:#2b2f55; }
+.certificate{ background:#2b2f55; }
+.compare{ background:#2b2f55; }
+
+.delete{ background:#f44336; }
+.gmail{ background:#3a86ff; }
+.share{ background:#4caf50; }
+
+.btn:hover{
+opacity:0.9;
+}
+
+/* ---------------- BOTTOM NAV ---------------- */
+
+.bottom-nav{
+position:fixed;
+bottom:0;
+left:0;
+width:100%;
+height:80px;
+background:white;
+display:flex;
+justify-content:space-around;
+align-items:center;
+border-top:1px solid #ccc;
+}
+
+.nav-item{
+text-align:center;
+font-size:14px;
+color:#444;
+cursor:pointer;
+}
+
+.nav-item.active{
+background:#d7d8f5;
+padding:10px 25px;
+border-radius:10px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+<h1>History</h1>
+</div>
+
+<div class="container">
+
+<div class="search-row">
+
+<div class="search-box">
+<input type="text" placeholder="Search by Lot No">
+<span>🔍</span>
+</div>
+
+<div class="search-box">
+<input type="text" placeholder="Search by Certificate">
+<span>🔍</span>
+</div>
+
+</div>
+
+<div id="historyContainer"></div>
+
+</div>
+
+<div class="bottom-nav">
+<div class="nav-item" onclick="goToDashboard()">🏠<br>Dashboard</div>
+<div class="nav-item active">🕘<br>History</div>
+<div class="nav-item">🎧<br>Help</div>
+</div>
+
+<script>
+
+/* ---------------- NAVIGATION ---------------- */
+
+function goToDashboard(){
+window.location.href="dashboard.html";
+}
+
+/* ---------------- LOAD HISTORY ---------------- */
+
+async function loadHistory(){
+
+try{
+
+const response=await fetch("http://localhost:3000/history");
+const data=await response.json();
+
+const container=document.getElementById("historyContainer");
+container.innerHTML="";
+
+if(data.length===0){
+container.innerHTML="<p>No scans available.</p>";
+return;
+}
+
+data.forEach((item,index)=>{
+
+const card=document.createElement("div");
+card.className="history-card";
+
+card.innerHTML=`
+
+<div class="card-header" onclick="toggleCard(this)">
+<div>
+<h3>${index+1}. ${item.fileName}</h3>
+<small>${new Date().toLocaleDateString()}</small>
+</div>
+<div class="arrow">▶</div>
+</div>
+
+<div class="card-content">
+
+<div class="button-row">
+<button class="btn result" onclick="viewResult('${item.url}')">Result</button>
+<button class="btn certificate" onclick="viewCertificate('${item.fileName}')">Certificate</button>
+<button class="btn compare" onclick="compareImage('${item.fileName}')">Compare</button>
+</div>
+
+<div class="button-row">
+<button class="btn delete" onclick="deleteImage('${item.fileName}')">Delete</button>
+<button class="btn gmail" onclick="sendGmail('${item.fileName}')">Send to Gmail</button>
+<button class="btn share" onclick="shareImage('${item.url}')">Share</button>
+</div>
+
+</div>
+`;
+
+container.appendChild(card);
+
+});
+
+}catch(error){
+
+console.error("Error loading history:",error);
+
+}
+
+}
+
+/* ---------------- OPEN CARD ---------------- */
+
+function toggleCard(element){
+
+const content=element.nextElementSibling;
+const arrow=element.querySelector(".arrow");
+
+if(content.style.display==="block"){
+content.style.display="none";
+arrow.innerHTML="▶";
+}else{
+content.style.display="block";
+arrow.innerHTML="▼";
+}
+
+}
+
+/* ---------------- OPEN RESULT PAGE ---------------- */
+
+function viewResult(imageUrl){
+
+const encodedUrl = encodeURIComponent(imageUrl);
+
+window.location.href = "result.html?image=" + encodedUrl;
+
+}
+
+/* ---------------- DELETE IMAGE ---------------- */
+
+async function deleteImage(fileName){
+
+await fetch(`http://localhost:3000/delete/${fileName}`,{
+method:"DELETE"
+});
+
+loadHistory();
+
+}
+
+/* ---------------- OTHER BUTTONS ---------------- */
+
+function viewCertificate(fileName){
+alert("Generate certificate for "+fileName);
+}
+
+function compareImage(fileName){
+alert("Compare image "+fileName);
+}
+
+function sendGmail(fileName){
+alert("Send to Gmail: "+fileName);
+}
+
+function shareImage(url){
+
+if(navigator.share){
+navigator.share({
+title:"Diamond Scan Result",
+text:"Check this scan",
+url:url
+});
+}else{
+alert("Sharing not supported on this browser");
+}
+
+}
+
+window.onload=loadHistory;
+
+</script>
+
+</body>
+</html>

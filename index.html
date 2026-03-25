@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diamond Tech</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+body{height:100vh;overflow:hidden;}
+
+#splash{
+    position:fixed;width:100%;height:100%;
+    background:url("newmedbackimg.png") no-repeat center/cover;
+    display:flex;justify-content:center;align-items:center;
+    flex-direction:column;z-index:1000;transition:opacity 0.8s ease;
+}
+
+.splash-logo{width:110px;margin-bottom:15px;}
+
+#authPage{
+    display:none;height:100vh;
+    background:url("splachbckmed.png") no-repeat center/cover;
+    justify-content:center;align-items:center;flex-direction:column;
+}
+
+.main-title{position:absolute;top:60px;font-size:42px;color:#2c3e50;}
+
+.auth-box{
+    width:400px;
+    padding:40px;
+    background:rgba(255,255,255,0.9);
+    border-radius:15px;
+    text-align:center;
+
+    /* ADDED BLACK BORDER */
+    border: 2px solid black;
+}
+
+.auth-box input{
+    width:100%;padding:12px;margin-bottom:20px;
+    border:1px solid #ccc;border-radius:8px;
+}
+
+.auth-box button{
+    width:100%;padding:12px;border:none;border-radius:8px;
+    background:#2c3e50;color:white;cursor:pointer;
+}
+
+.toggle{
+    margin-top:15px;
+    font-size:14px;
+    cursor:pointer;
+    color:#2c3e50;
+}
+
+.error{color:red;margin-top:10px;}
+.success{color:green;margin-top:10px;}
+</style>
+</head>
+<body>
+
+<div id="splash">
+    <class="splash-logo">
+</div>
+
+<div id="authPage">
+    <h1 class="main-title">Welcome to Mindron Meditech India</h1>
+
+    <div class="auth-box">
+        <h2 id="formTitle">User Login</h2>
+
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password" required>
+
+        <button onclick="handleAuth()">Login</button>
+
+        <div id="message"></div>
+
+        <div class="toggle" onclick="toggleMode()">
+            Don't have an account? Register
+        </div>
+    </div>
+</div>
+
+<script>
+let isLogin = true;
+
+// Splash screen
+setTimeout(()=>{
+    document.getElementById("splash").style.opacity="0";
+    setTimeout(()=>{
+        document.getElementById("splash").style.display="none";
+        document.getElementById("authPage").style.display="flex";
+    },800);
+},3000);
+
+// Toggle Login/Register
+function toggleMode(){
+    isLogin = !isLogin;
+
+    document.getElementById("formTitle").innerText = 
+        isLogin ? "User Login" : "User Registration";
+
+    document.querySelector("button").innerText = 
+        isLogin ? "Login" : "Register";
+
+    document.querySelector(".toggle").innerText =  
+        isLogin ? "Don't have an account? Register" : "Already have an account? Login";
+
+    document.getElementById("message").innerHTML = "";
+}
+
+// Handle Login / Register
+async function handleAuth(){
+
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const messageBox = document.getElementById("message");
+
+    if(!username || !password){
+        messageBox.className = "error";
+        messageBox.innerText = "All fields are required";
+        return;
+    }
+
+    const endpoint = isLogin ? "login" : "register";
+
+    try{
+        const response = await fetch(`http://localhost:3000/${endpoint}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if(response.ok){
+
+            if(isLogin){
+                window.location.href = "dashboard.html";
+            }else{
+                messageBox.className = "success";
+                messageBox.innerText = "Registration successful! Please login.";
+                toggleMode();
+            }
+
+        }else{
+            messageBox.className = "error";
+            messageBox.innerText = data.message;
+        }
+
+    }catch(error){
+        messageBox.className = "error";
+        messageBox.innerText = "Server not running!";
+    }
+}
+</script>
+
+</body>
+</html>

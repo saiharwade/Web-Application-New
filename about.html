@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About - D-Vision Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg-dark:      #020b18;
+  --bg-panel:     rgba(4, 18, 38, 0.82);
+  --bg-card:      rgba(6, 24, 50, 0.9);
+  --cyan:         #00e5ff;
+  --cyan-dim:     rgba(0,229,255,0.15);
+  --cyan-glow:    rgba(0,229,255,0.5);
+  --green:        #00ff9d;
+  --yellow:       #ffe033;
+  --red:          #ff3c5a;
+  --text-bright:  #e8f4ff;
+  --text-muted:   #6a90b8;
+  --border:       rgba(0,229,255,0.2);
+  --border-bright:rgba(0,229,255,0.55);
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Exo 2', sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-bright);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(0,80,160,0.3) 0%, transparent 70%);
+}
+
+/* scanline overlay */
+body::after {
+  content: '';
+  position: fixed; inset: 0;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ─── HEADER ─── */
+.header {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  background: rgba(2,11,24,0.92);
+  border-bottom: 1px solid var(--border-bright);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+}
+
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), var(--cyan-glow), transparent);
+  animation: scanH 3s linear infinite;
+}
+@keyframes scanH {
+  0%   { transform:scaleX(0); transform-origin:left; }
+  50%  { transform:scaleX(1); transform-origin:left; }
+  50.1%{ transform:scaleX(1); transform-origin:right; }
+  100% { transform:scaleX(0); transform-origin:right; }
+}
+
+.header-left { display:flex; align-items:center; gap:14px; }
+.header-left img { width:42px; filter:drop-shadow(0 0 6px var(--cyan)); }
+.brand-name { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; letter-spacing:2px; color:var(--cyan); text-shadow:0 0 16px var(--cyan-glow); }
+.brand-sub  { font-size:10px; color:var(--text-muted); letter-spacing:3px; font-family:'Share Tech Mono',monospace; }
+
+.back-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 20px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text-muted);
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: .25s;
+}
+.back-btn:hover { border-color:var(--cyan); color:var(--cyan); box-shadow:0 0 12px var(--cyan-dim); }
+
+/* ─── PAGE BODY ─── */
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 24px 60px;
+}
+
+/* ─── HERO ─── */
+.hero {
+  text-align: center;
+  padding: 48px 0 40px;
+  position: relative;
+}
+
+.diamond-icon {
+  width: 90px; height: 90px;
+  margin: 0 auto 20px;
+  position: relative;
+}
+
+.diamond-icon svg {
+  width: 100%; height: 100%;
+  filter: drop-shadow(0 0 20px var(--cyan-glow));
+  animation: floatIcon 3.5s ease-in-out infinite;
+}
+@keyframes floatIcon {
+  0%,100% { transform:translateY(0); }
+  50%      { transform:translateY(-8px); }
+}
+
+/* rotating ring */
+.diamond-icon::before {
+  content:'';
+  position:absolute;
+  inset:-14px;
+  border-radius:50%;
+  border:1px dashed rgba(0,229,255,0.3);
+  animation: spinRing 10s linear infinite;
+}
+@keyframes spinRing { to { transform:rotate(360deg); } }
+
+.hero h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 46px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: var(--cyan);
+  text-shadow: 0 0 30px var(--cyan-glow);
+  margin-bottom: 6px;
+}
+.hero .tagline {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: var(--text-muted);
+  margin-bottom: 18px;
+}
+.version-pill {
+  display: inline-block;
+  padding: 4px 16px;
+  background: var(--cyan-dim);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  color: var(--cyan);
+  letter-spacing: 2px;
+}
+
+/* ─── DIVIDER ─── */
+.divider {
+  display: flex; align-items: center; gap: 16px;
+  margin: 32px 0;
+}
+.divider-line { flex:1; height:1px; background:var(--border); }
+.divider-label {
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;
+  letter-spacing:3px;
+  color:var(--text-muted);
+  white-space:nowrap;
+}
+
+/* ─── CARDS GRID ─── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.cards-grid.triple { grid-template-columns: 1fr 1fr 1fr; }
+
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  transition: .25s;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content:'';
+  position:absolute;
+  top:0; left:0; right:0; height:2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity:0;
+  transition:.25s;
+}
+.card:hover { border-color:var(--border-bright); box-shadow:0 0 20px rgba(0,229,255,.08); }
+.card:hover::before { opacity:1; }
+
+.card-icon { font-size:28px; margin-bottom:10px; }
+.card-title {
+  font-family:'Rajdhani',sans-serif;
+  font-size:17px;
+  font-weight:700;
+  letter-spacing:2px;
+  color:var(--cyan);
+  margin-bottom:8px;
+}
+.card-body {
+  font-size:13px;
+  line-height:1.7;
+  color:var(--text-muted);
+}
+.card-body strong { color:var(--text-bright); }
+
+/* ─── SPEC TABLE ─── */
+.spec-table { width:100%; border-collapse:collapse; }
+.spec-table tr { border-bottom:1px solid var(--border); }
+.spec-table tr:last-child { border-bottom:none; }
+.spec-table td {
+  padding: 10px 12px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:12px;
+}
+.spec-table td:first-child { color:var(--text-muted); width:44%; letter-spacing:1px; }
+.spec-table td:last-child  { color:var(--cyan); font-weight:600; }
+
+/* ─── DIAMOND TYPE BADGES ─── */
+.type-badges {
+  display:flex; gap:12px; justify-content:center;
+  flex-wrap:wrap;
+  margin: 8px 0;
+}
+.type-badge {
+  padding:10px 22px;
+  border-radius:8px;
+  font-family:'Rajdhani',sans-serif;
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:2px;
+  border:1px solid;
+}
+.type-badge.natural { color:#00ff9d; border-color:#00ff9d; background:rgba(0,255,157,0.08); text-shadow:0 0 12px #00ff9d88; }
+.type-badge.cvd     { color:#00e5ff; border-color:#00e5ff; background:rgba(0,229,255,0.08); text-shadow:0 0 12px #00e5ff88; }
+.type-badge.hpht    { color:#ff6b35; border-color:#ff6b35; background:rgba(255,107,53,0.08); text-shadow:0 0 12px #ff6b3588; }
+
+/* ─── CONTACT / TEAM ─── */
+.contact-row {
+  display:flex; align-items:center; gap:12px;
+  padding:12px 0;
+  border-bottom:1px solid var(--border);
+}
+.contact-row:last-child { border-bottom:none; }
+.contact-icon {
+  width:36px; height:36px;
+  border-radius:8px;
+  background:var(--cyan-dim);
+  border:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  font-size:16px;
+  flex-shrink:0;
+}
+.contact-label { font-size:11px; color:var(--text-muted); font-family:'Share Tech Mono',monospace; letter-spacing:1px; }
+.contact-value { font-size:14px; color:var(--text-bright); font-family:'Exo 2',sans-serif; font-weight:600; margin-top:2px; }
+
+/* ─── FOOTER ─── */
+.footer {
+  text-align:center;
+  padding:30px 0 10px;
+  font-family:'Share Tech Mono',monospace;
+  font-size:11px;
+  color:var(--text-muted);
+  letter-spacing:2px;
+  border-top:1px solid var(--border);
+  margin-top:40px;
+}
+.footer span { color:var(--cyan); }
+</style>
+</head>
+<body>
+
+<!-- ═══ HEADER ═══ -->
+<div class="header">
+  <div class="header-left">
+    <img src="mindronbluelogo.jpg" alt="logo">
+    <div>
+      <div class="brand-name">D-VISION PRO</div>
+      <div class="brand-sub">DIAMOND SEGREGATION SYSTEM</div>
+    </div>
+  </div>
+  <button class="back-btn" onclick="window.location.href='dashboard.html'">
+    ← &nbsp;BACK TO DASHBOARD
+  </button>
+</div>
+
+<!-- ═══ PAGE ═══ -->
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="diamond-icon">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,8 90,38 75,92 25,92 10,38" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+        <polygon points="50,8 90,38 50,52" fill="rgba(0,229,255,0.08)" stroke="#00e5ff" stroke-width="1"/>
+        <polygon points="50,8 10,38 50,52" fill="rgba(0,229,255,0.05)" stroke="#00e5ff" stroke-width="1"/>
+        <polygon points="90,38 75,92 50,52" fill="rgba(0,229,255,0.06)" stroke="#00e5ff" stroke-width="1"/>
+        <polygon points="10,38 25,92 50,52" fill="rgba(0,229,255,0.04)" stroke="#00e5ff" stroke-width="1"/>
+        <polygon points="75,92 25,92 50,52" fill="rgba(0,229,255,0.1)"  stroke="#00e5ff" stroke-width="1"/>
+        <line x1="50" y1="8"  x2="50" y2="52" stroke="rgba(0,229,255,0.25)" stroke-width="0.8"/>
+        <line x1="90" y1="38" x2="10" y2="38" stroke="rgba(0,229,255,0.25)" stroke-width="0.8"/>
+      </svg>
+    </div>
+    <h1>D-VISION PRO</h1>
+    <div class="tagline">DIAMOND SEGREGATION & CLASSIFICATION SYSTEM</div>
+    <div class="version-pill">VERSION 1.0.0</div>
+  </div>
+
+  <!-- WHAT IS THIS -->
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">OVERVIEW</div><div class="divider-line"></div></div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title">ABOUT THIS APPLICATION</div>
+    <div class="card-body">
+      D-Vision Pro is an <strong>AI-powered diamond segregation system</strong> developed by Mindron Meditech India.
+      It integrates with a physical scanning machine to capture real-time images of diamonds and automatically
+      classify them into one of three categories using computer vision and machine learning.
+      The system is designed for diamond labs, grading facilities, and manufacturing units that require
+      fast, accurate, and consistent classification at scale.
+    </div>
+  </div>
+
+  <!-- CLASSIFICATION TYPES -->
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">CLASSIFICATION</div><div class="divider-line"></div></div>
+
+  <div class="cards-grid triple">
+    <div class="card">
+      <div class="card-icon">🟢</div>
+      <div class="card-title" style="color:#00ff9d;">NATURAL</div>
+      <div class="card-body">
+        Diamonds formed deep within the Earth over <strong>billions of years</strong> under extreme heat and pressure.
+        Mined from kimberlite pipes and alluvial deposits worldwide.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔵</div>
+      <div class="card-title" style="color:#00e5ff;">CVD</div>
+      <div class="card-body">
+        <strong>Chemical Vapour Deposition</strong> — lab-grown diamonds produced by depositing carbon atoms onto a substrate in a vacuum chamber using hydrocarbon gases.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🟠</div>
+      <div class="card-title" style="color:#ff6b35;">HPHT</div>
+      <div class="card-body">
+        <strong>High Pressure High Temperature</strong> — lab-grown diamonds created by mimicking the natural formation conditions using extreme pressure and temperature.
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin:20px 0;">
+    <div class="type-badges">
+      <div class="type-badge natural">NATURAL</div>
+      <div class="type-badge cvd">CVD</div>
+      <div class="type-badge hpht">HPHT</div>
+    </div>
+  </div>
+
+  <!-- FEATURES & SPECS -->
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">FEATURES & SPECS</div><div class="divider-line"></div></div>
+
+  <div class="cards-grid">
+    <div class="card">
+      <div class="card-title">⚙ SYSTEM FEATURES</div>
+      <div class="card-body">
+        <strong>Real-time camera feed</strong> with live scanning overlay<br><br>
+        <strong>AI-powered classification</strong> — CVD, HPHT, or Natural<br><br>
+        <strong>Confidence scoring</strong> per scan result<br><br>
+        <strong>Scan history</strong> with delete, share &amp; export options<br><br>
+        <strong>Category breakdown</strong> chart &amp; live counters<br><br>
+        <strong>Lot management</strong> with custom IDs, size &amp; shape
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🖥 TECHNICAL SPECS</div>
+      <table class="spec-table">
+        <tr><td>PLATFORM</td><td>Electron + Node.js</td></tr>
+        <tr><td>FRONTEND</td><td>HTML5 / CSS3 / JS</td></tr>
+        <tr><td>BACKEND</td><td>Express.js v5</td></tr>
+        <tr><td>AUTH</td><td>bcrypt password hashing</td></tr>
+        <tr><td>STORAGE</td><td>Local filesystem (PNG/JPG)</td></tr>
+        <tr><td>CAMERA</td><td>WebRTC getUserMedia API</td></tr>
+        <tr><td>RESOLUTION</td><td>Up to 1920 × 1080</td></tr>
+        <tr><td>NODE VERSION</td><td>≥ 18.x</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- DEVELOPER -->
+  <div class="divider"><div class="divider-line"></div><div class="divider-label">DEVELOPER INFO</div><div class="divider-line"></div></div>
+
+  <div class="card">
+    <div class="card-title">🏢 MINDRON MEDITECH INDIA</div>
+    <div style="margin-top:4px;">
+      <div class="contact-row">
+        <div class="contact-icon">🏭</div>
+        <div>
+          <div class="contact-label">COMPANY</div>
+          <div class="contact-value">Mindron Meditech India Pvt. Ltd.</div>
+        </div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-icon">📦</div>
+        <div>
+          <div class="contact-label">PRODUCT</div>
+          <div class="contact-value">D-Vision Pro — Diamond Segregation System</div>
+        </div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-icon">🔖</div>
+        <div>
+          <div class="contact-label">VERSION</div>
+          <div class="contact-value">v1.0.0 &nbsp;·&nbsp; Build 2025</div>
+        </div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-icon">⚖️</div>
+        <div>
+          <div class="contact-label">LICENSE</div>
+          <div class="contact-value">Proprietary — All rights reserved</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    © 2025 &nbsp;<span>Mindron Meditech India</span>&nbsp; · &nbsp;D-Vision Pro&nbsp; · &nbsp;All Rights Reserved
+  </div>
+
+</div>
+
+</body>
+</html>

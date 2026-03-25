@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan Result</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial;
+}
+
+body{
+background:#f2f2f2;
+}
+
+.top-bar{
+height:70px;
+display:flex;
+align-items:center;
+justify-content:center;
+background:white;
+border-bottom:1px solid #ddd;
+}
+
+.top-bar h1{
+font-size:30px;
+color:#444;
+}
+
+.container{
+width:70%;
+margin:40px auto;
+}
+
+.result-card{
+background:white;
+padding:25px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+text-align:center;
+}
+
+.result-card img{
+max-width:100%;
+border-radius:8px;
+margin-bottom:20px;
+}
+
+.back-btn{
+padding:12px 25px;
+background:#1c2754;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-size:16px;
+}
+
+.back-btn:hover{
+opacity:0.9;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="top-bar">
+<h1>Scan Result</h1>
+</div>
+
+<div class="container">
+
+<div class="result-card">
+
+<img id="resultImage">
+
+<br>
+
+<button class="back-btn" onclick="goBack()">Back to History</button>
+
+</div>
+
+</div>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+
+const imageUrl = params.get("image");
+
+if(imageUrl){
+document.getElementById("resultImage").src = decodeURIComponent(imageUrl);
+}
+
+function goBack(){
+window.location.href = "history.html";
+}
+
+</script>
+
+</body>
+</html>
